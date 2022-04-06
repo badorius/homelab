@@ -1,0 +1,11 @@
+---
+# tasks file for kvm_provision
+---
+# tasks file for kvm_provision
+- name: Ensure requirements in place
+  package:
+    name:
+      - guestfs-tools
+      - python3-libvirt
+    state: present
+  become: yes
