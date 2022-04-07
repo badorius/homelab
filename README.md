@@ -65,10 +65,13 @@ $ cd homelab/kvm_provision
 Edit and change pool_dir: 
 
 >kvmlab/kvm_provision.yaml:    pool_dir: "/home/darthv/libvirt/images"
+
 >kvmlab/roles/kvm_provision/defaults/main.yml:libvirt_pool_dir: "/home/darthv/libvirt/images"
+
 >kvmlab/roles/kvm_provision/defaults/main.yml:vm_root_pass:$YOURPASS
 
-Check name of your Linux distrubition and addapt the follow package names on file kvmlab/roles/kvm_provision/tasks/main.yml
+
+Check exactly the name of the following packages and change it if is needed on file kvmlab/roles/kvm_provision/tasks/main.yml
 ```yml
 - name: Ensure requirements in place
   package:
