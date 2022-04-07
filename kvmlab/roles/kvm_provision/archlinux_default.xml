@@ -1,7 +1,7 @@
 <domain type='kvm'>
   <name>archlinux_default</name>
   <uuid>0ebefc55-16a9-46ef-bb0a-172d624e7ec4</uuid>
-  <description>Source: /home/darthv/vagrant/archlinux/Vagrantfile</description>
+  <description>Source: $HOME/vagrant/archlinux/Vagrantfile</description>
   <memory unit='KiB'>524288</memory>
   <currentMemory unit='KiB'>524288</currentMemory>
   <vcpu placement='static'>1</vcpu>
