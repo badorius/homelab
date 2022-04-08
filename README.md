@@ -1,4 +1,5 @@
 # HOMELAB FOLLOW
+[kubernetes-ansible-vagrant](https://kubernetes.io/blog/2019/03/15/kubernetes-setup-using-ansible-and-vagrant/)
 [Build a lab in 36 seconds with Ansible](https://www.redhat.com/sysadmin/build-VM-fast-ansible)
 
 Libvirt has to be installed and enabled:
@@ -12,6 +13,9 @@ Optional vagrant:
 
 Optional vagrant information:
 [HashiCorp](https://learn.hashicorp.com/tutorials/vagrant/getting-started-project-setup?in=vagrant/getting-started)
+
+---
+# KUBERNETES ANSIBLE VAGRANT
 
 ---
 
@@ -91,6 +95,7 @@ Or create 5 machines:
 ```shell
 for i in 1 2 3 4 5 ; do ansible-playbook -K kvm_provision.yaml -e vm=f34-lab0$i ; done
 for i in 1 2 3 4 5 ; do virsh domifaddr f34-lab0$i ; done
+for i in 1 2 3 4 5 ; do sudo virsh domifaddr f34-lab0$i |grep ipv; done|awk '{print $4}'|cut -f 1 -d "/" > $HOME/git/badorius/homelab/ansible/hosts
 
 ```
 ---
