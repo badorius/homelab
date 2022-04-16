@@ -1,0 +1,16 @@
+[rpi]
+rpi
+rpi2
+rpi3
+
+[arch]
+nunuk
+ingrid
+kalopsia
+
+[master]
+rpi3
+
+[worker]
+rpi
+rpi2
