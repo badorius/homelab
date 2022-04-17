@@ -1,36 +1,38 @@
 ---
-- hosts: master
-  become: yes
+- hosts: rpi3 
+  #become: yes
+  remote_user: darthv
   tasks:
   - name: Install k3s
     shell: |
-      curl -sfL https://get.k3s.io | sh -
+      curl -sfL https://get.k3s.io | sudo sh -
       sudo systemctl status k3s
       sudo cat /var/lib/rancher/k3s/server/node-token
+
+  - name: Install k3sup
+    shell: |
+      curl -sLS https://get.k3sup.dev | sudo sh
+    #ignore_errors: yes 
+
+  - name: Install arkade 
+    shell: |
+      curl -sLS https://dl.get-arkade.dev | sudo sh
+    #ignore_errors: yes
+
+
+  - name: Join Workers
+    shell: |
+      k3sup install --ip 192.168.133 --user darthv
+      k3sup join --ip "{{ item }}" --server-ip 192.168.1.33 --user darthv
+    with_items:
+      - 192.168.1.4 
+      - 192.168.1.32
 
 - hosts: rpi 
   become: yes
   tasks:
-  - name: Install k3sup
-    shell: |
-      curl -sLS https://get.k3sup.dev | sh
-      sudo install k3sup /usr/local/bin/
-
-  - name: Install arkade
-    shell: curl -sLS https://get.arkade.dev | sudo sh
-
-
-
-
-  - name: Install k3s 
-    shell: /usr/local/bin/k3s-uninstall.sh
-    when: k3s.stat.exist is defined
-
-  - name: Install k3s agent
-    shell: /usr/local/bin/k3s-agent-uninstall.sh 
-    when: k3sagent.stat.exist is defined
-
   - name: Install kubernetes-client
     ansible.builtin.package:
       name: kubernetes-client
-      state: absent
+      state: present
+
