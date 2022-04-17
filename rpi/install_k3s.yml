@@ -22,7 +22,7 @@
 
   - name: Join Workers
     shell: |
-      k3sup install --ip 192.168.133 --user darthv
+      k3sup install --ip 192.168.33 --user darthv
       k3sup join --ip "{{ item }}" --server-ip 192.168.1.33 --user darthv
     with_items:
       - 192.168.1.4 
