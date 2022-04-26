@@ -1,0 +1,45 @@
+---
+- hosts: rpi 
+  become: yes
+  #remote_user: root
+  gather_facts: no
+  tasks:
+
+  - name: Check k3s is installed
+    stat:
+      path: /usr/local/bin/k3s-uninstall.sh
+    register: k3s        
+
+  - name: Check k3s agent is installed
+    stat:
+      path: /usr/local/bin/k3s-agent-uninstall.sh
+    register: k3sagent   
+
+  - name: Delete k3s 
+    shell: |        
+      - systemctl stop k3s
+      - /usr/local/bin/k3s-uninstall.sh
+    #when: k3s.stat.exist is defined
+    ignore_errors: yes   
+
+  - name: Delete k3s agent
+    shell: |
+      - systemctl stop k3s-agent
+      - /usr/local/bin/k3s-agent-uninstall.sh 
+    #when: k3sagent.stat.exist is defined
+    ignore_errors: yes   
+
+  - name: Delete arkade and k3sub
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: absent
+    with_items: 
+      - /usr/local/bin/arkade
+      - /usr/local/bin/k3sup
+      - /home/darthv/.kube
+
+  - name: Delete kubernetes-client pkg
+    ansible.builtin.package:
+      name: kubernetes-client
+      state: absent
+
