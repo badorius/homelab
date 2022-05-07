@@ -1,4 +1,4 @@
-# MINIKUBE
+# MINIKUBE MULTINODE ON KVM
 ---
 [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
 
@@ -31,7 +31,7 @@ sudo systemctl enable libvirtd.service
 sudo systemctl start virtlogd.service
 sudo systemctl enable virtlogd.service
 ```
-# Instal docker-machine and docker-machine-driver-kvm2 in order to manage VM Kubernetes:
+# Install docker-machine and docker-machine-driver-kvm2 pkg in order to manage VM Kubernetes:
 ---
 ```shell
 sudo pacman -Sy docker-machine
