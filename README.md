@@ -1,12 +1,13 @@
-# HOMELAB FOLLOW
----
-
 # MINIKUBE
 ---
 [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
+
 [https://minikube.sigs.k8s.io/docs/](https://minikube.sigs.k8s.io/docs/)
+
 [https://minikube.sigs.k8s.io/docs/tutorials/multi_node/](https://minikube.sigs.k8s.io/docs/tutorials/multi_node/)
+
 [https://howtoforge.es/aprender-kubernetes-localmente-a-traves-de-minikube-en-manjaro-archlinux/](https://howtoforge.es/aprender-kubernetes-localmente-a-traves-de-minikube-en-manjaro-archlinux/)
+
 [https://www.digihunch.com/2021/09/single-node-kubernetes-cluster-minikube/](https://www.digihunch.com/2021/09/single-node-kubernetes-cluster-minikube/)
 
 # Install Packages
