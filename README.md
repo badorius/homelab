@@ -1,101 +1,180 @@
 # HOMELAB FOLLOW
-[kubernetes-ansible-vagrant](https://kubernetes.io/blog/2019/03/15/kubernetes-setup-using-ansible-and-vagrant/)
-[Build a lab in 36 seconds with Ansible](https://www.redhat.com/sysadmin/build-VM-fast-ansible)
-
-Libvirt has to be installed and enabled:
-[libvirt](https://wiki.archlinux.org/title/libvirt)
-
-Ansible and virt module has to be installed:
-[ansible libvirt](https://docs.ansible.com/ansible/latest/collections/community/libvirt/virt_module.html)
-
-Optional vagrant:
-[vagrant](https://wiki.archlinux.org/title/Vagrant)
-
-Optional vagrant information:
-[HashiCorp](https://learn.hashicorp.com/tutorials/vagrant/getting-started-project-setup?in=vagrant/getting-started)
-
----
-# KUBERNETES ANSIBLE VAGRANT
-
 ---
 
-# ANSIBLE
-
-```shell
-pacman -S ansible-core ansible vim-ansible
-mkdir ansible
-ansible-config init --disabled -t all > ansible.cfg
-ansible all -m ping         
-ansible-galaxy collection list|grep -i libvirt
-
-```
->NOTE: PYTHON3 and PYTHON2 needed on ansible clients.
-                            
----                         
-
-# VAGRANT
-```shell
-pacman -S vagrant
-systemctl start libvirtd
-                       
-vagrant plugin install vagrant-vbguest vagrant-share
-vagrant plugin install vagrant-libvirt
-                            
-mkdir -p $HOME/vagrant/archlinux
-cd $HOME/vagrant/archlinux  
-vagrant init archlinux/archlinux
-vagrant box add archlinux/archlinux --provider=libvirt
-vagrant up --provider=libvirt
-vagrant ssh                 
-```shell                    
+# MINIKUBE
 ---
+[https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
+[https://minikube.sigs.k8s.io/docs/](https://minikube.sigs.k8s.io/docs/)
+[https://minikube.sigs.k8s.io/docs/tutorials/multi_node/](https://minikube.sigs.k8s.io/docs/tutorials/multi_node/)
+[https://howtoforge.es/aprender-kubernetes-localmente-a-traves-de-minikube-en-manjaro-archlinux/](https://howtoforge.es/aprender-kubernetes-localmente-a-traves-de-minikube-en-manjaro-archlinux/)
+[https://www.digihunch.com/2021/09/single-node-kubernetes-cluster-minikube/](https://www.digihunch.com/2021/09/single-node-kubernetes-cluster-minikube/)
 
-# Build a lab in 36 seconds with Ansible
-
-Create a project directory for this automation and switch to it:
-```shell
-mkdir -p kvmlab/roles && cd kvmlab/roles
-```
-Then, initialize the role using the command ansible-galaxy:
-```shell
-$ ansible-galaxy role init kvm_provision
-
-- Role kvm_provision was created successfully
-```
-```shell
-$ git clone git@github.com:badorius/homelab.git
-$ cd homelab/kvm_provision
-```
-Edit and change pool_dir: 
-
->kvmlab/kvm_provision.yaml:    pool_dir: "/home/darthv/libvirt/images"
-
->kvmlab/roles/kvm_provision/defaults/main.yml:libvirt_pool_dir: "/home/darthv/libvirt/images"
-
->kvmlab/roles/kvm_provision/defaults/main.yml:vm_root_pass:$YOURPASS
-
-
-Check exactly the name of the following packages and change it if is needed on file kvmlab/roles/kvm_provision/tasks/main.yml
-```yml
-- name: Ensure requirements in place
-  package:
-    name:
-      - libguestfs
-      - libvirt-python
-      - guestfs-tools
-    state: present
-  become: yes
-```
-Execute playbook
-```shell
-$ ansible-playbook -K kvm_provision.yaml 
-```
-
-Or create 5 machines:
-```shell
-for i in 1 2 3 4 5 ; do ansible-playbook -K kvm_provision.yaml -e vm=f34-lab0$i ; done
-for i in 1 2 3 4 5 ; do virsh domifaddr f34-lab0$i ; done
-for i in 1 2 3 4 5 ; do sudo virsh domifaddr f34-lab0$i |grep ipv; done|awk '{print $4}'|cut -f 1 -d "/" > $HOME/git/badorius/homelab/ansible/hosts
-
-```
+# Install Packages
 ---
+```shell
+sudo pacman -Sy libvirt qemu ebtables dnsmasq
+```
+# Add user to libvirt group
+---
+```shell
+sudo usermod -a -G libvirt $(whoami)
+newgrp libvirt
+```
+
+# Start and enable libvirtd virtlogd services
+---
+```shell
+sudo systemctl start libvirtd.service
+sudo systemctl enable libvirtd.service
+ 
+sudo systemctl start virtlogd.service
+sudo systemctl enable virtlogd.service
+```
+# Instal docker-machine and docker-machine-driver-kvm2 in order to manage VM Kubernetes:
+---
+```shell
+sudo pacman -Sy docker-machine
+yay -Sy docker-machine-driver-kvm2
+```
+
+# Install minikube kubectl packages:
+---
+```shell
+yay -Sy minikube kubectl
+```
+
+# Check minikube and kubectl:
+---
+```shell
+minikube version
+whereis kubectl
+kubectl -h
+```
+
+# Start kubernetes with minikube (1 Control Plane and 2 workers as example)
+---
+```shell
+minikube start --nodes 3 --vm-driver kvm2
+```
+# Check kubernetes cluster:
+---
+```shell
+minikube status
+kubectl cluster-info
+kubectl get nodes
+minikube status -p  minikube  
+```
+# First deployment (Nginx):
+---
+```shell
+mkdir -p minikube/projects/hello/
+cd minikube/projects/hello/
+```
+
+# Create yaml deployment file:
+---
+```shell
+vim hello-deployment.yaml
+```
+# Add the following content:
+---
+```yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      affinity:
+        # ⬇⬇⬇ This ensures pods will land on separate hosts
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions: [{ key: app, operator: In, values: [hello] }]
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: hello-from
+        image: pbitty/hello-from:latest
+        ports:
+          - name: http
+            containerPort: 80
+      terminationGracePeriodSeconds: 1
+```
+# Create hello service in order to access hello pod:
+---
+```shell
+vi hello-svc.yaml
+```
+# Add the following content to yaml file:
+---
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello
+spec:
+  type: NodePort
+  selector:
+    app: hello
+  ports:
+    - protocol: TCP
+      nodePort: 31000
+      port: 80
+      targetPort: http
+```
+# Deploy hello pod and service:
+---
+```shell
+kubectl apply -f hello-deployment.yaml
+kubectl rollout status deployment/hello
+```
+
+# Check out the IP addresses of our pods, to note for future reference
+---
+```shell
+kubectl get pods -o wide
+```
+
+# Look at our service, to know what URL to hit
+---
+```shell
+minikube service list -p multinode-demo
+```
+
+# Let’s hit the URL a few times and see what comes back
+---
+```shell
+curl  http://192.168.49.2:31000
+```
+
+# Run minikube dashboard:
+---
+```shell
+minikube addons list
+```
+
+
+
+
+
+
+# KIND
+---
+[https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
+[https://kind.sigs.k8s.io/docs/user/quick-start/](https://kind.sigs.k8s.io/docs/user/quick-start/)
+
+

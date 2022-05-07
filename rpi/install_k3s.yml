@@ -1,7 +1,7 @@
 ---
 - hosts: rpi3 
   #become: yes
-  remote_user: darthv
+  remote_user: user
   tasks:
   - name: Install k3s
     shell: |
@@ -22,8 +22,8 @@
 
   - name: Join Workers
     shell: |
-      k3sup install --ip 192.168.33 --user darthv
-      k3sup join --ip "{{ item }}" --server-ip 192.168.1.33 --user darthv
+      k3sup install --ip 192.168.33 --user user
+      k3sup join --ip "{{ item }}" --server-ip 192.168.1.33 --user user
     with_items:
       - 192.168.1.4 
       - 192.168.1.32

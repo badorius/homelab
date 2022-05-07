@@ -36,7 +36,7 @@
     with_items: 
       - /usr/local/bin/arkade
       - /usr/local/bin/k3sup
-      - /home/darthv/.kube
+      - /home/user/.kube
 
   - name: Delete kubernetes-client pkg
     ansible.builtin.package:
