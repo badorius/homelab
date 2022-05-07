@@ -150,25 +150,52 @@ kubectl rollout status deployment/hello
 kubectl get pods -o wide
 ```
 
+```shell
+NAME                    READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
+hello-ccfbb9679-dx5zx   1/1     Running   0          24m   10.244.1.2   minikube-m02   <none>           <none>
+hello-ccfbb9679-pfgmn   1/1     Running   0          24m   10.244.2.2   minikube-m03   <none>           <none>
+```
+
 # Look at our service, to know what URL to hit
 ---
 ```shell
-minikube service list -p multinode-demo
+minikube service list -p minikube
+```
+
+```shell
+|----------------------|---------------------------|--------------|-----------------------------|
+|      NAMESPACE       |           NAME            | TARGET PORT  |             URL             |
+|----------------------|---------------------------|--------------|-----------------------------|
+| default              | hello                     |           80 | http://192.168.39.135:31000 |
+| default              | kubernetes                | No node port |
+| kube-system          | kube-dns                  | No node port |
+| kubernetes-dashboard | dashboard-metrics-scraper | No node port |
+| kubernetes-dashboard | kubernetes-dashboard      | No node port |
+|----------------------|---------------------------|--------------|-----------------------------|
+
 ```
 
 # Let’s hit the URL a few times and see what comes back
 ---
 ```shell
-curl  http://192.168.49.2:31000
+curl http://192.168.39.135:31000
+```
+
+```shell
+Hello from hello-ccfbb9679-dx5zx (10.244.1.2)
+Hello from hello-ccfbb9679-dx5zx (10.244.1.2)
+Hello from hello-ccfbb9679-pfgmn (10.244.2.2)
+Hello from hello-ccfbb9679-pfgmn (10.244.2.2)
+Hello from hello-ccfbb9679-dx5zx (10.244.1.2)
 ```
 
 # Run minikube dashboard:
 ---
 ```shell
-minikube addons list
+minikube dashboard
 ```
 
-
+![Dashboard](IMAGES/dashboard.jpg)
 
 
 
