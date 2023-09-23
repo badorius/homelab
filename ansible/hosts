@@ -1,9 +1,4 @@
-[apt]
-rpi
-rpi2
-rpi3
-
 [pacman]
-nunuk
-ingrid
-kalopsia
+chux01
+chux02
+chux03

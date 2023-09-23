@@ -42,3 +42,10 @@
   tasks:
   - name: Update the Packages installed on Diskstation
     command: /opt/bin/ipkg update && /opt/bin/ipkg upgrade
+
+- hosts: pacman
+  become: yes
+  tasks:
+  - name: Run the equivalent of "pacman -Su" as a separate step
+    community.general.pacman:
+      upgrade: true
