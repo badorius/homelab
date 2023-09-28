@@ -394,4 +394,3 @@ After a few minutes, the new AWX instance will be deployed. You can look at the 
 [https://kind.sigs.k8s.io/docs/user/quick-start/](https://kind.sigs.k8s.io/docs/user/quick-start/)
 
 
-
