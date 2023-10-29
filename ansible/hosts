@@ -1,4 +1,4 @@
-[pacman]
-chux01
-chux02
-chux03
+[apt]
+chux01 ansible_python_interpreter=/usr/bin/python3
+chux02 ansible_python_interpreter=/usr/bin/python3
+chux03 ansible_python_interpreter=/usr/bin/python3
