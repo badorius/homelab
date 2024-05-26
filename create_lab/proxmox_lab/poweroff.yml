@@ -1,0 +1,18 @@
+---
+- hosts: all
+  become: yes
+  #remote_user: root
+  tasks:
+  - name: Unconditionally shut down the machine with all defaults
+    community.general.shutdown:
+
+  - name: Delay shutting down the remote node
+    community.general.shutdown:
+      delay: 60
+
+  - name: Shut down a machine with shutdown command in unusual place
+    community.general.shutdown:
+      search_paths:
+       - '/lib/molly-guard'
+
+

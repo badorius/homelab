@@ -1,0 +1,79 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update and upgrade the system
+      pacman:
+        update_cache: yes
+        upgrade: yes
+
+    - name: Remove iptables if it exists
+      shell: |
+        pacman -Rdd --noconfirm iptables || true
+      ignore_errors: yes
+
+    - name: Install necessary packages and resolve iptables conflict
+      shell: |
+        pacman -Sy --noconfirm --needed ebtables ethtool socat conntrack-tools kubelet kubeadm kubectl docker iptables-nft
+      register: install_packages
+      failed_when: "'error' in install_packages.stderr"
+      changed_when: "'installed' in install_packages.stdout"
+
+    - name: Create /etc/docker directory
+      file:
+        path: /etc/docker
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Ensure Docker uses systemd as the cgroup driver
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "exec-opts": ["native.cgroupdriver=systemd"]
+          }
+      notify: Restart Docker
+
+    - name: Start and enable Docker service
+      ansible.builtin.service:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Enable and start kubelet service
+      ansible.builtin.service:
+        name: kubelet
+        enabled: yes
+        state: started
+
+    - name: Initialize Kubernetes control plane (control plane only)
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=NumCPU
+      when: "'control_plane' in group_names"
+      register: kubeadm_init
+
+    - name: Save kubeadm join command
+      shell: kubeadm token create --print-join-command
+      when: "'control_plane' in group_names"
+      register: kubeadm_join_command
+
+    - name: Set up kubeconfig for the control plane user
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+      when: "'control_plane' in group_names"
+
+    - name: Apply Flannel CNI network
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      when: "'control_plane' in group_names"
+
+    - name: Join worker nodes to the cluster (worker nodes only)
+      shell: "{{ hostvars['control_plane']['kubeadm_join_command'].stdout }}"
+      when: "'worker' in group_names"
+
+  handlers:
+    - name: Restart Docker
+      ansible.builtin.service:
+        name: docker
+        state: restarted

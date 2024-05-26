@@ -1,0 +1,74 @@
+---
+- name: Reset and Reinitialize Kubernetes Cluster
+  hosts: all
+  become: yes
+  tasks:
+    - name: Reset Kubernetes cluster on all nodes
+      command: kubeadm reset -f
+      ignore_errors: yes
+
+    - name: Remove Kubernetes configuration directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/kubernetes
+        - /var/lib/kubelet
+        - /var/lib/kubernetes
+        - /var/lib/etcd
+
+
+    - name: Disable swap temporarily
+      command: swapoff -a
+      ignore_errors: true
+
+
+    - name: Reinitialize control plane
+      block:
+        - name: Initialize Kubernetes control plane (control plane only)
+          command: kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=NumCPU
+          register: init_output
+          changed_when: "'certificate' in init_output.stderr"
+
+        - name: Save kubeadm join command
+          when: init_output.changed
+          copy:
+            content: "{{ init_output.stdout_lines | select('match', '^kubeadm join') | join('\n') }}"
+            dest: /tmp/kubeadm_join_command.txt
+
+        - name: Set up kubeconfig for the control plane user
+          when: init_output.changed
+          block:
+            - name: Copy kubeconfig files to user's home directory
+              copy:
+                src: /etc/kubernetes/admin.conf
+                dest: "{{ lookup('env', 'HOME') }}/.kube/config"
+                remote_src: yes
+              become: no
+
+            - name: Set ownership and permissions for kubeconfig
+              file:
+                path: "{{ lookup('env', 'HOME') }}/.kube/config"
+                owner: "{{ ansible_user }}"
+                group: "{{ ansible_user }}"
+                mode: "0644"
+              become: no
+
+            - name: Export KUBECONFIG environment variable
+              ansible.builtin.set_fact:
+                environment:
+                  KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+
+    - name: Join worker nodes to the cluster (worker nodes only)
+      block:
+        - name: Retrieve kubeadm join command from control plane
+          command: cat /tmp/kubeadm_join_command.txt
+          register: join_command
+          when: init_output.changed
+          become: no
+
+        - name: Join worker nodes to the cluster
+          command: "{{ join_command.stdout }}"
+          when: join_command is defined and init_output.changed
+          become: yes
+

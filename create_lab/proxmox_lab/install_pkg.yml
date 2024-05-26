@@ -1,0 +1,77 @@
+---
+- hosts: pacman
+  become: yes
+  tasks:
+
+  - name: Run the equivalent of "pacman -Syu" as a separate step
+    pacman:
+      update_cache: yes
+      upgrade: yes
+
+  - name: Install kubernetes
+    pacman:
+      name: [kubeadm,kubectl,containerd,helm] 
+      state: present
+
+  - name: Start and enable Docker service
+    ansible.builtin.service:
+      name: containerd
+      enabled: yes
+      state: started
+
+  - name: Copy modules file
+    ansible.builtin.copy:
+      src:  files/modules-load.d/k8s.conf
+      dest: /etc/modules-load.d/k8s.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Copy sysctl file 
+    ansible.builtin.copy:
+      src:  files/sysctl.d/k8s.conf
+      dest: /etc/sysctl.d/k8s.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Create directory containerd
+    ansible.builtin.file:
+      path: /etc/containerd
+      state: directory
+      owner: root
+      group: root
+      mode: 0775
+
+  - name: Create default containerd config
+    ansible.builtin.shell: 
+      chdir: /etc/containerd
+      cmd: containerd config default > /etc/containerd/config.toml
+
+  - name: Ensure SystemdCgroup = true on /etc/containerd/config.toml
+    ansible.builtin.lineinfile:
+      path: /etc/containerd/config.toml 
+      search_string: 'SystemdCgroup = false'
+      line: '            SystemdCgroup = true' 
+
+  - name: Enable and restart containerd service
+    ansible.builtin.service:
+      name: containerd
+      enabled: yes
+      state: restarted
+
+- hosts: control_plane
+  become: yes
+  tasks:
+
+  - name: Install kubernetes control plane tools
+    pacman:
+      name: kubernetes-control-plane
+
+- hosts: worker
+  become: yes
+  tasks:
+
+  - name: Install kubernetes worker tools
+    pacman:
+      name: kubernetes-node

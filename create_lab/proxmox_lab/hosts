@@ -1,0 +1,14 @@
+[pacman]
+k8scp1.home
+k8sw1.home
+k8sw2.home
+
+[control_plane]
+k8scp1.home
+
+[worker]
+k8sw1.home 
+k8sw2.home
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

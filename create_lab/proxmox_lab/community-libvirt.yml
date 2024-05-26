@@ -1,0 +1,46 @@
+# a playbook task line:
+- community.libvirt.virt:
+    name: alpha
+    state: running
+
+# /usr/bin/ansible invocations
+# ansible host -m virt -a "name=alpha command=status"
+# ansible host -m virthttps://www.redhat.com/sysadmin/build-VM-fast-ansible -a "name=alpha command=get_xml"
+# ansible host -m virt -a "name=alpha command=create uri=lxc:///"
+
+# defining and launching an LXC guest
+- name: define vm
+  community.libvirt.virt:
+    command: define
+    xml: "{{ lookup('template', 'container-template.xml.j2') }}"
+    uri: 'lxc:///'
+- name: start vm
+  community.libvirt.virt:
+    name: foo
+    state: running
+    uri: 'lxc:///'
+
+# setting autostart on a qemu VM (default uri)
+- name: set autostart for a VM
+  community.libvirt.virt:
+    name: foo
+    autostart: yes
+
+# Defining a VM and making is autostart with host. VM will be off after this task
+- name: define vm from xml and set autostart
+  community.libvirt.virt:
+    command: define
+    xml: "{{ lookup('template', 'vm_template.xml.j2') }}"
+    autostart: yes
+
+# Listing VMs
+- name: list all VMs
+  community.libvirt.virt:
+    command: list_vms
+  register: all_vms
+
+- name: list only running VMs
+  community.libvirt.virt:
+    command: list_vms
+    state: running
+  register: running_vms
