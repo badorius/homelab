@@ -1,0 +1,9 @@
+[k8s_nodes]
+arch01 ansible_host=192.168.8.244
+arch02 ansible_host=192.168.8.240
+arch03 ansible_host=192.168.8.235
+
+[all:vars]
+ansible_user=darthv
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+

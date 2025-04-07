@@ -1,0 +1,4 @@
+[pacman]
+arch01.home ansible_python_interpreter=/usr/bin/python3
+arch02.home ansible_python_interpreter=/usr/bin/python3
+arch03.home ansible_python_interpreter=/usr/bin/python3

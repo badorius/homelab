@@ -1,0 +1,23 @@
+---
+- name: Actualizar y reiniciar nodos del clúster
+  hosts: k8s_nodes
+  become: true
+  tasks:
+
+    - name: Actualizar el sistema (pacman -Syu --noconfirm)
+      pacman:
+        update_cache: yes
+        upgrade: yes
+
+    - name: Verificar si es necesario reiniciar (check kernel update)
+      shell: |
+        [ "$(uname -r)" != "$(pacman -Q linux | awk '{print $2}' | cut -d '-' -f1)" ] && echo "reboot" || echo "ok"
+      register: reboot_required
+      changed_when: false
+
+    - name: Reiniciar si el kernel cambió
+      reboot:
+        msg: "Reiniciando el sistema tras la actualización del kernel"
+        reboot_timeout: 600
+      when: reboot_required.stdout == "reboot"
+
